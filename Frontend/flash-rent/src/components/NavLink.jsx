@@ -9,7 +9,7 @@ export default function CustomNavLink({ className = '', children, ...props }) {
                 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:text-gray-700 focus:border-gray-300 dark:text-gray-100 dark:hover:text-white ' +
                 className
             }
-            activeClassName="border-indigo-400 text-gray-900 focus:border-indigo-700"
+            activeclassname="border-indigo-400 text-gray-900 focus:border-indigo-700"
         >
             {children}
         </NavLink>
