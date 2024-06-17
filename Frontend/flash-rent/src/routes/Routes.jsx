@@ -4,6 +4,7 @@ import PropertyDetails from "../pages/PropertyDetails";
 import RentalApplication from "../pages/RentalApplication";
 import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
+import TenantDashboard from "../pages/tenant/TenantDashboard";
 
 const Router = createBrowserRouter (
     createRoutesFromElements (
@@ -14,6 +15,9 @@ const Router = createBrowserRouter (
         <Route path='/auth/*'>
             <Route path='login' element={<Login />} />
             <Route path='forgot-password' element={<ForgotPassword />} />
+        </Route>
+        <Route path='/tenant/*'>
+            <Route path='dashboard' element={<TenantDashboard />} />
         </Route>
         </>
     )
