@@ -5,6 +5,7 @@ import SearchFilter from "../components/SearchFilter";
 import PropertyCard from "../components/PropertyCard";
 import Pagination from "../components/Pagination";
 import image1 from "../images/image1.jpg";
+import { usePagination } from '../hooks/usePagination';
 
 const menuItems = [
     { label: "Mall" },
@@ -29,24 +30,13 @@ const properties = [
 
 
 export default function HomePage() {
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
-    const totalPages = Math.ceil(properties.length / itemsPerPage);
+    const [currentPage, totalPages, handlePageChange, displayedItems] = usePagination({ items: properties });
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
         const searchTerm = event.target.elements['search-input'].value;
         console.log('Searching for:', searchTerm);
     };
-
-    const handlePageChange = (newPage) => {
-        if (newPage > 0 && newPage <= totalPages) {
-            setCurrentPage(newPage);
-        }
-    };
-
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const displayedProperties = properties.slice(startIndex, startIndex + itemsPerPage);
 
     return (
         <GuestLayout>
@@ -73,7 +63,7 @@ export default function HomePage() {
                     <div className="px-4 py-6">
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Search Results</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {displayedProperties.map((property) => (
+                            {displayedItems.map((property) => (
                                 <PropertyCard key={property.id} property={property} />
                             ))}
                         </div>
