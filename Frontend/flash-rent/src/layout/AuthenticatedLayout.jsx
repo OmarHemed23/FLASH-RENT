@@ -108,7 +108,7 @@ export default function AuthenticatedLayout({ children }) {
                             <Dropdown.Trigger>
                                 <button type="button" className="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300">
                                     <img src={Profile} alt="" className="w-10 h-10 rounded-full"/>
-                                    <span class="top-0 left-7 absolute  w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
+                                    <span className="top-0 left-7 absolute  w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content contentClasses='bg-white dark:bg-gray-700'>
