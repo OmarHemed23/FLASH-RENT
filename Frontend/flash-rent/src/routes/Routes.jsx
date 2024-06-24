@@ -5,6 +5,9 @@ import RentalApplication from "../pages/RentalApplication";
 import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import TenantDashboard from "../pages/tenant/TenantDashboard";
+import LeaseAgreementPage from "../pages/tenant/LeaseAgreementPage";
+import MaintenanceRequestPage from "../pages/tenant/MaintenanceRequestPage";
+import MaintenanceRequestDetails from "../pages/tenant/partials/MaintenanceRequestDetails";
 
 const Router = createBrowserRouter (
     createRoutesFromElements (
@@ -18,6 +21,9 @@ const Router = createBrowserRouter (
         </Route>
         <Route path='/tenant/*'>
             <Route path='dashboard' element={<TenantDashboard />} />
+            <Route path='lease-agreement' element={<LeaseAgreementPage />} />
+            <Route path='maintenance' element={<MaintenanceRequestPage />} />
+            <Route path='maintenance/:id' element={<MaintenanceRequestDetails/> } />
         </Route>
         </>
     )
