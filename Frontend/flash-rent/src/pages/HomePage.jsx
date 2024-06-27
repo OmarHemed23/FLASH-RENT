@@ -53,7 +53,7 @@ export default function HomePage() {
                         </div>
                         <div className="flex flex-col md:flex-row items-stretch md:items-center md:space-x-3 space-y-3 md:space-y-0 justify-between w-full px-4 py-4 dark:border-gray-700 border-t">
                             <div className="w-full">
-                                <SearchInput onSubmit={handleSearchSubmit} />
+                                <SearchInput onSubmit={handleSearchSubmit} placeholder="Search for properties" />
                             </div>
                             <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
                                 <SearchFilter value="Properties" menuItems={menuItems} />
