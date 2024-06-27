@@ -8,6 +8,10 @@ import TenantDashboard from "../pages/tenant/TenantDashboard";
 import LeaseAgreementPage from "../pages/tenant/LeaseAgreementPage";
 import MaintenanceRequestPage from "../pages/tenant/MaintenanceRequestPage";
 import MaintenanceRequestDetails from "../pages/tenant/partials/MaintenanceRequestDetails";
+import PaymentCenterPage from "../pages/tenant/PaymentCenterPage";
+import TenantTalk from "../pages/tenant/TenantTalk";
+import DocumentPage from "../pages/tenant/DocumentPage";
+import ChatArea from "../pages/tenant/partials/ChatArea";
 
 const Router = createBrowserRouter (
     createRoutesFromElements (
@@ -24,6 +28,10 @@ const Router = createBrowserRouter (
             <Route path='lease-agreement' element={<LeaseAgreementPage />} />
             <Route path='maintenance' element={<MaintenanceRequestPage />} />
             <Route path='maintenance/:id' element={<MaintenanceRequestDetails/> } />
+            <Route path='payment-center' element={<PaymentCenterPage />} />
+            <Route path='tenant-talk' element={<TenantTalk />} />
+            <Route path="tenant-talk/:userId" element={<ChatArea />} />
+            <Route path='document' element={<DocumentPage />} />
         </Route>
         </>
     )
