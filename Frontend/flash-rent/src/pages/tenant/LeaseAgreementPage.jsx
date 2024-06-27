@@ -34,7 +34,7 @@ export default function LeaseAgreementPage () {
 
   return (
     <AuthenticatedLayout>
-      <div className="w-full mt-6 px-4 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
+      <div className="w-full mt-6 px-4 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden rounded-lg">
         {!activeLease && !isNewTenant && !isUploaded && (
           <div className="ml-10">
             <h2 className="text-white text-lg font-semibold mb-4">New Tenant</h2>
