@@ -28,3 +28,6 @@ flashRent-venv
 
 # Byte-compiled
 __pycache__/
+
+# Media
+media
