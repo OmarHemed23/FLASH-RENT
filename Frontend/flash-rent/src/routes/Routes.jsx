@@ -17,8 +17,8 @@ const Router = createBrowserRouter (
     createRoutesFromElements (
         <>
         <Route path='/' element={<HomePage />} />
-        <Route path='/property/:id' element={<PropertyDetails />} />
-        <Route path='/property/:id/apply' element={<RentalApplication />} />
+        <Route path='/property/:name' element={<PropertyDetails />} />
+        <Route path='/property/:name/apply' element={<RentalApplication />} />
         <Route path='/auth/*'>
             <Route path='login' element={<Login />} />
             <Route path='forgot-password' element={<ForgotPassword />} />
