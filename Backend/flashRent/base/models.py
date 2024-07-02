@@ -34,13 +34,13 @@ class Property (models.Model):
     }
     name = models.CharField(max_length=255, unique=True)
     property_type = models.ForeignKey(PropertyType, on_delete=models.CASCADE)
-    address = AddressField()
+    address = AddressField(on_delete=models.CASCADE)
     rent_amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(null=True, blank=True)
     image1 = models.ImageField(upload_to='images/', blank=True, null=True)
     image2 = models.ImageField(upload_to='images/', blank=True, null=True)
     image3 = models.ImageField(upload_to='images/', blank=True, null=True)
-    status = models.CharField(max_length=20, choices=PROPERTY_STATUS, default="Av")
+    status = models.CharField(max_length=20, choices=PROPERTY_STATUS, default="Available")
 
     class Meta: 
         verbose_name_plural = "Properties"
