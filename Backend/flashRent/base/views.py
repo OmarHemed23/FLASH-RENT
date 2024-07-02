@@ -24,12 +24,23 @@ class PropertyViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
         search_query = self.request.query_params.get('search', '')
         property_type = self.request.query_params.get('property_type', '')
+        min_rent = self.request.query_params.get('min_rent', None)
+        max_rent = self.request.query_params.get('max_rent', None)
 
         if search_query:
-            queryset = queryset.filter(name__icontains=search_query)
+            try:
+                search_amount = float(search_query)
+                queryset = queryset.filter(rent_amount=search_amount)
+            except ValueError:
+                queryset = queryset.filter(name__icontains=search_query)
+    
         if property_type:
             property_types = property_type.split(',')
             queryset = queryset.filter(property_type__property_type__in=property_types)
+        if min_rent is not None:
+            queryset = queryset.filter(rent_amount__gte=min_rent)
+        if max_rent is not None:
+            queryset = queryset.filter(rent_amount__lte=max_rent)
 
         return queryset
 
