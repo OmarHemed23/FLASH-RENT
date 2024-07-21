@@ -4,7 +4,7 @@ import TextArea from "./TextArea";
 import SelectInput from "./SelectInput";
 
 export default function FormField ({ label, type = "text", name, id, placeholder, required = false, readOnly = false, rows, 
-options = [], ...props }) {
+options = [], value, ...props }) {
     return (
         <div className="w-full">
             <Label htmlFor={id} className="mb-2">
@@ -20,6 +20,7 @@ options = [], ...props }) {
                     options={options}
                     placeholder={placeholder}
                     required={required}
+                    value={value}
                 />
             ) : (
                 <TextInput
@@ -31,6 +32,7 @@ options = [], ...props }) {
                     placeholder={placeholder}
                     required={required}
                     readOnly={readOnly}
+                    value={value}
                 />
             )}
         </div>

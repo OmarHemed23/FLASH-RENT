@@ -12,14 +12,6 @@ import Checkbox from '../components/Checkbox';
 import FormField from '../components/FormField';
 import Label from '../components/Label';
 
-const debounce = (func, delay) => {
-    let debounceTimer;
-    return (...args) => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => func.apply(this, args), delay);
-    };
-};
-
 export default function HomePage() {
     const [properties, setProperties] = useState([]);
     const [currentPage, totalPages, handlePageChange, displayedItems] = usePagination({ items: properties });
@@ -29,6 +21,14 @@ export default function HomePage() {
     const [loading, setLoading] = useState(true); 
     const [minRent, setMinRent] = useState('');
     const [maxRent, setMaxRent] = useState('');
+
+    const debounce = (func, delay) => {
+        let debounceTimer;
+        return (...args) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => func.apply(this, args), delay);
+        };
+    };
 
     const fetchProperties = async (params) => {
         try {
@@ -87,7 +87,7 @@ export default function HomePage() {
             ) : (
                 <section className="relative h-full p-4">
                     <div className="max-w-screen px-4">
-                        <div className="bg-white dark:bg-gray-800 relative shadow-md rounded-lg overflow-hidden">
+                        <div className="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 relative shadow-md rounded-lg overflow-hidden">
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
                                 <div className="flex-1 flex items-center space-x-2">
                                     <h5>

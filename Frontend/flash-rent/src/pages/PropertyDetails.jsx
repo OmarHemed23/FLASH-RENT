@@ -46,11 +46,11 @@ export default function PropertyDetails () {
 
     return (
         <GuestLayout>
-            <section className="py-8 mt-4 bg-white dark:bg-gray-800 rounded-lg md:py-16 antialiased shadow-md overflow-auto">
+            <section className="py-8 mt-4 bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg md:py-16 antialiased shadow-md overflow-auto">
                 <div className="max-w-screen-xl px-4 mx-auto">
                     <div className="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-16">
                         <div className="shrink-0 max-w-md lg:max-w-lg mx-auto">
-                            <img className="w-full block" src={property.image1} alt="" />
+                            <img className="w-full block" src={property.image1_url} alt="" />
                         </div>
                         <div className="mt-6 sm:mt-8 lg:mt-0">
                             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -87,5 +87,4 @@ export default function PropertyDetails () {
             </section>
         </GuestLayout>
     );
-};
-
+}

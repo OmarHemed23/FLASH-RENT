@@ -1,22 +1,38 @@
+import { useState, useEffect } from "react";
+import axios from 'axios';
 import { Link } from "react-router-dom";
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import Pagination from "../../components/Pagination";
 import SearchInput from "../../components/SearchInput";
 import AuthenticatedLayout from "../../layout/AuthenticatedLayout";
 import { usePagination } from "../../hooks/usePagination";
+import { useToken } from "../../hooks/useToken";
 
-const documents = [
-    {id: 1, documentName: "Lease agreement", publicationDate: "12-12-2023"},
-];
 
-export default function DocumentPage () {
+export default function DocumentPage() {
+    const [documents, setDocuments] = useState([]);
     const [currentPage, totalPages, handlePageChange, displayedItems] = usePagination({ items: documents });
+    const {token} = useToken();
+
+    useEffect(() => {
+        axios.get('http://localhost:8000/api/documents/', {
+            headers: {
+                'Authorization': `token ${token}`
+            }
+        })
+            .then(response => {
+                setDocuments(response.data);
+            })
+            .catch(error => {
+                console.error("Error fetching documents:", error);
+            });
+    }, [currentPage]);
 
     return (
         <AuthenticatedLayout>
             <section className="p-3 sm:p-5">
                 <div className="mx-auto max-w-screen-xl px-4 lg:px-12">
-                    <div className="bg-white dark:bg-gray-800 relative pb-3 shadow-md rounded-lg overflow-hidden">
+                    <div className="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 relative pb-3 shadow-md rounded-lg overflow-hidden">
                         <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
                             <div className="w-full md:w-1/2">
                                 <SearchInput placeholder="Search for documents" />
@@ -41,10 +57,10 @@ export default function DocumentPage () {
                                     {displayedItems.map((document) => (
                                         <tr key={document.id} className="border-b dark:border-gray-700">
                                             <th scope="row" className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                {document.documentName}
+                                                {document.name}
                                             </th>
                                             <td className="px-4 py-3">
-                                                {document.publicationDate}
+                                                {new Date(document.publication_date).toLocaleDateString()}
                                             </td>
                                             <Menu>
                                                 <td className="px-4 py-3 flex items-center justify-end">
@@ -57,10 +73,21 @@ export default function DocumentPage () {
                                                         <div className="bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
                                                             <ul className="py-1 text-sm text-gray-700 dark:text-gray-200">
                                                                 <MenuItem>
-                                                                    <Link className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">View</Link>
+                                                                    <Link
+                                                                        to={`/documents/${document.id}/view`}
+                                                                        className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                                                    >
+                                                                        View
+                                                                    </Link>
                                                                 </MenuItem>
                                                                 <MenuItem>
-                                                                    <Link className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Download</Link>
+                                                                    <a
+                                                                        href={document.file}
+                                                                        download={document.name}
+                                                                        className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                                                    >
+                                                                        Download
+                                                                    </a>
                                                                 </MenuItem>
                                                             </ul>
                                                         </div>
@@ -78,4 +105,5 @@ export default function DocumentPage () {
             </section>
         </AuthenticatedLayout>
     );
-};
+}
+

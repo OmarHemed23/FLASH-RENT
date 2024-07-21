@@ -1,9 +1,13 @@
-import { Link, NavLink } from "react-router-dom";
+import axios from "axios";
+import { useState, useEffect } from "react";
+import { Link, NavLink, Navigate, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Dropdown from '../components/Dropdown';
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from '../hooks/useSideBar';
 import Profile from '../images/profile.jpg';
+import Spinner from "../components/Spinner";
+import { useToken } from "../hooks/useToken";
 
 const navLinks = [
     {   to: "/tenant/dashboard", label: "Dashboard", icon: (
@@ -30,14 +34,6 @@ const navLinks = [
         </svg>
         )
     },
-    {   to: "/tenant/tenant-talk", label: "Tenant Talk", icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor">
-            <path d="M64 0C28.7 0 0 28.7 0 64V352c0 35.3 28.7 64 64 64h96v80c0 6.1 3.4 11.6 8.8 14.3s11.9 2.1 16.8-1.5L309.3 416H448c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64H64z"/>
-        </svg>
-
-        ),
-        badge: 4
-    },
     {   to: "/tenant/document", label: "Documents", icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor">
             <path d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM80 64h64c8.8 0 16 7.2 16 16s-7.2 16-16 16H80c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64h64c8.8 0 16 7.2 16 16s-7.2 16-16 16H80c-8.8 0-16-7.2-16-16s7.2-16 16-16zm16 96H288c17.7 0 32 14.3 32 32v64c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V256c0-17.7 14.3-32 32-32zm0 32v64H288V256H96zM240 416h64c8.8 0 16 7.2 16 16s-7.2 16-16 16H240c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/>
@@ -47,61 +43,55 @@ const navLinks = [
 ];
 
 export default function AuthenticatedLayout({ children }) {
-    const { showingSidebar, openSidebar, closeSidebar } = useSidebar();
+    const [tenantData, setTenantData] = useState(null);
+    const [loading, setLoading] = useState();
+    const {showingSidebar, openSidebar, closeSidebar} = useSidebar();
+    const {token, clearToken} = useToken();
+    const navigate = useNavigate();
 
+    useEffect(() => {
+        const fetchTenantData = async () => {
+          if (token) {
+            try {
+              setLoading(true);
+              const response = await axios.get('http://localhost:8000/api/tenant-profiles/', {
+                headers: {
+                  'Authorization': `token ${token}`,
+                },
+              });
+              
+              if (response.data.length > 0) {
+                setTenantData(response.data[0]);
+                console.log('Tenant Data:', response.data);
+              }
+            } catch (error) {
+              console.error('Error fetching tenant data:', error);
+            } finally {
+              setLoading(false);
+            }
+          }
+        };
+        fetchTenantData();
+    }, [token]);
+
+    if (loading) {
+        return <Spinner className="bg-gray-50 dark:bg-gray-900" />;
+    }
+
+    if (!token) {
+        return <Navigate to="/auth/login" replace />
+    }
+
+    const handleLogout = () => {
+        clearToken();
+        navigate('/auth/login');
+    };
+    
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <Navbar openSidebar={openSidebar} showingSidebar={showingSidebar}>
                 <div className="flex items-center">
                     <div className="flex items-center ms-3">
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <button className="flex text-sm ml-3 font-medium text-center text-gray-500 hover:text-gray-900 focus:outline-none dark:hover:text-white dark:text-gray-400" type="button">
-                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
-                                    </svg>
-                                    <div className="absolute block w-3 h-3 bg-red-500 border-2 border-white rounded-full -top-0.5 start-2.5 dark:border-gray-900"></div>
-                                </button>
-                            </Dropdown.Trigger>
-                            <Dropdown.Content width='96' contentClasses='overflow-hidden text-base list-none bg-white divide-y divide-gray-100 shadow-lg dark:divide-gray-600 dark:bg-gray-700'>
-                                <div className="max-w-sm block py-2 px-4 text-base font-medium text-center text-gray-700 bg-gray-50 dark:bg-gray-600 dark:text-gray-300">
-                                    Notifications
-                                </div>
-                                <div>
-                                    <Link to="#" className="flex py-3 px-4 border-b hover:bg-gray-100 dark:hover:bg-gray-600 dark:border-gray-600">
-                                        <div className="flex-shrink-0">
-                                            <img className="w-11 h-11 rounded-full" src={Profile} alt=""/>
-                                            <div className="flex absolute justify-center items-center ml-6 -mt-5 w-5 h-5 rounded-full border border-white bg-blue-600 dark:border-gray-700">
-                                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8.707 7.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414L11 7.586V3a1 1 0 10-2 0v4.586l-.293-.293z"/>
-                                                    <path d="M3 5a2 2 0 012-2h1a1 1 0 010 2H5v7h2l1 2h4l1-2h2V5h-1a1 1 0 110-2h1a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div className="pl-3 w-full">
-                                            <div className="text-gray-500 font-normal text-sm mb-1.5 dark:text-gray-400">
-                                                New message from 
-                                                <span className="font-semibold text-gray-900 dark:text-white ml-2">
-                                                    Omar Hemed
-                                                </span> :"Hey, what's up? All set for the presentation?"
-                                            </div>
-                                            <div className="text-xs font-medium text-blue-600 dark:text-blue-500">
-                                                a few moments ago
-                                            </div>
-                                        </div>
-                                    </Link>
-                                    <NavLink to="#" className="block py-2 text-md font-medium text-center text-gray-900 bg-gray-50 hover:bg-gray-100 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-900 dark:hover:underline">
-                                        <div className="inline-flex items-center">
-                                            <svg className="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                                            </svg>
-                                            View all
-                                        </div>
-                                    </NavLink>
-                                </div>
-                            </Dropdown.Content>
-                        </Dropdown>
                     </div>
                     <div className="flex items-center ms-3">
                         <Dropdown>
@@ -114,26 +104,25 @@ export default function AuthenticatedLayout({ children }) {
                             <Dropdown.Content contentClasses='bg-white dark:bg-gray-700'>
                                 <div className="text-base list-none divide-y divide-gray-100 dark:divide-gray-600">
                                     <div className="py-3 px-4">
-                                        <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                                            Omar Hemed
-                                        </span>
-                                        <span className="block text-sm text-gray-900 truncate dark:text-white">
-                                            omarhemed800@gmail.com
-                                        </span>
+                                        {tenantData && (
+                                            <>
+                                                <span className="block text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {tenantData.tenant_name}
+                                                </span>
+                                                <span className="block text-sm text-gray-900 truncate dark:text-white">
+                                                    {tenantData.email}
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                     <ul className="py-1 text-gray-700 dark:text-gray-300">
                                         <li>
-                                            <NavLink to="#" className="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white">
+                                            <NavLink to="/tenant/profile" className="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white">
                                                 My profile
                                             </NavLink>
                                         </li>
-                                        <li>
-                                            <NavLink to="#" className="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white">
-                                                Account settings
-                                            </NavLink>
-                                        </li>
                                     </ul>
-                                    <ul className="py-1 text-gray-700 dark:text-gray-300">
+                                    <ul onClick={handleLogout} className="py-1 text-gray-700 dark:text-gray-300">
                                         <li>
                                             <NavLink to="#" className="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                                 Sign out

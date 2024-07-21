@@ -1,116 +1,120 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PrimaryButton from "../../components/PrimaryButton";
 import AuthenticatedLayout from "../../layout/AuthenticatedLayout";
-import LeaseActionStepper from "../../components/LeaseActionStepper";
-import Alert from "../../components/Alert";
+import axios from "axios";
+import { useToken } from "../../hooks/useToken";
+import Pagination from "../../components/Pagination";
+import { usePagination } from "../../hooks/usePagination";
 
-export default function LeaseAgreementPage () {
-  const [leaseData, setLeaseData] = useState([
-    {
-      propertyLeased: '123ABC',
-      tenant: 'Omar Hemed',
-      startDate: '2022-01-01',
-      endDate: '2022-12-31',
-      status: 'Pending'
-    }
-  ]);
-
-  const [isNewTenant, setIsNewTenant] = useState(false);
+export default function LeaseAgreementPage() {
+  const [leaseData, setLeaseData] = useState([]);
+  const [activeLease, setActiveLease] = useState(null);
   const [isUploaded, setIsUploaded] = useState(false);
+  const {token} = useToken();
+  const [currentPage, totalPages, handlePageChange, displayedItems] = usePagination({ items: leaseData });
 
-  const activeLease = leaseData.find(lease => lease.status === 'Active');
+  useEffect(() => {
+    fetchLeaseData();
+  }, []);
 
-  const handleFileUpload = (event) => {
-    console.log("File uploaded:", event.target.files[0]);
-    setIsUploaded(true);
-    setLeaseData([...leaseData, {
-      propertyLeased: '456DEF',
-      tenant: 'Omar Hemed',
-      startDate: '2023-01-01',
-      endDate: '2023-12-31',
-      status: 'Active'
-    }]);
+  const fetchLeaseData = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/tenant-profiles/', {
+        headers: {
+          'Authorization': `token ${token}`,
+        },
+      });
+      setLeaseData(response.data);
+      const activeLease = response.data.find((lease) => lease.lease_status === "Active");
+      setActiveLease(activeLease);
+    } catch (error) {
+      console.error("Error fetching lease data:", error);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (activeLease) {
+      try {
+        const response = await axios({
+          url: `http://localhost:8000/lease-agreement/${activeLease.id}/`,
+          method: 'GET',
+          responseType: 'blob',
+          headers: {
+            'Authorization': `token ${token}`,
+          },
+        });
+
+        const file = new Blob([response.data], { type: 'application/pdf' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file);
+        link.download = `lease_agreement_${activeLease.id}.pdf`;
+        link.click();
+      } catch (error) {
+        console.error("Error downloading lease agreement:", error);
+      }
+    }
   };
 
   return (
     <AuthenticatedLayout>
-      <div className="w-full mt-6 px-4 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden rounded-lg">
-        {!activeLease && !isNewTenant && !isUploaded && (
-          <div className="ml-10">
-            <h2 className="text-white text-lg font-semibold mb-4">New Tenant</h2>
-            <p className="text-white mb-4">Please download the lease agreement, sign it, and upload the signed document.</p>
-            <LeaseActionStepper handleFileUpload={handleFileUpload} />
-          </div>
-        )}
-        {activeLease && (
-          <div>
-            <PrimaryButton>
-              Renew Lease
-            </PrimaryButton>
-            <div className="mt-8">
-                <Alert type="error" message="Please ensure all lease agreements are signed and returned by the specified deadline."/>
+      {leaseData.length > 0 && (
+        <div className="w-full mt-6 px-4 py-4 bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 shadow-md overflow-hidden rounded-lg">
+            <div>
+              <div className="overflow-x-auto mb-2">
+                <table className="text-sm text-left text-gray-500 mt-4 shadow-md">
+                  <thead className="text-xs text-gray-900 dark:text-white uppercase bg-gray-100 dark:bg-gray-700">
+                    <tr>
+                      <th scope="col" className="px-6 py-3">Property Leased</th>
+                      <th scope="col" className="px-6 py-3">Tenant</th>
+                      <th scope="col" className="px-6 py-3">Start Date</th>
+                      <th scope="col" className="px-6 py-3">End Date</th>
+                      <th scope="col" className="px-6 py-3">Status</th>
+                      <th scope="col" className="px-6 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeLease ? (
+                      <tr className="bg-gray-100 dark:bg-gray-900 border-b">
+                        <th scope="row" className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                          {activeLease.property_name || "N/A"}
+                        </th>
+                        <td className="px-6 py-4">
+                          {activeLease.tenant_name || "N/A"}
+                        </td>
+                        <td className="px-6 py-4">
+                          {new Date(activeLease.lease_start).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          {new Date(activeLease.lease_end).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          {activeLease.lease_status}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-4">
+                            <PrimaryButton onClick={handleDownload}>Download</PrimaryButton>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center py-4">
+                          No active lease found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="overflow-x-auto mb-2">
-              <table className="text-sm text-left text-gray-500 mt-4 shadow-md">
-                <thead className="text-xs text-gray-900 dark:text-white uppercase bg-gray-100 dark:bg-gray-700">
-                  <tr>
-                    <th scope='col' className="px-6 py-3">
-                      Property Leased
-                    </th>
-                    <th scope='col' className="px-6 py-3">
-                      Tenant
-                    </th>
-                    <th scope='col' className="px-6 py-3">
-                      Start Date
-                    </th>
-                    <th scope='col' className="px-6 py-3">
-                      End Date
-                    </th>
-                    <th scope='col' className="px-6 py-3">
-                      Status
-                    </th>
-                    <th scope='col' className="px-6 py-3">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="bg-gray-100 dark:bg-gray-900 border-b">
-                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                      {activeLease.propertyLeased}
-                    </th>
-                    <td className="px-6 py-4">
-                      {activeLease.tenant}
-                    </td>
-                    <td className="px-6 py-4">
-                      {activeLease.startDate}
-                    </td>
-                    <td className="px-6 py-4">
-                      {activeLease.endDate}
-                    </td>
-                    <td className="px-6 py-4">
-                      {activeLease.status}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-4">
-                        <PrimaryButton>
-                          Download
-                        </PrimaryButton>
-                        <PrimaryButton>
-                          Renew
-                        </PrimaryButton>
-                        <PrimaryButton className="bg-red-800">
-                          Terminate
-                        </PrimaryButton>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
+
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange}/>
+        </div>
+      )}
     </AuthenticatedLayout>
   );
-};
+}
+
+
+

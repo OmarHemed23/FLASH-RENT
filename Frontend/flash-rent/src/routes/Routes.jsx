@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createBrowserRouter, createRoutesFromElements, Route } from "react-router-dom";
 import HomePage from "../pages/HomePage";
 import PropertyDetails from "../pages/PropertyDetails";
@@ -12,6 +13,8 @@ import PaymentCenterPage from "../pages/tenant/PaymentCenterPage";
 import TenantTalk from "../pages/tenant/TenantTalk";
 import DocumentPage from "../pages/tenant/DocumentPage";
 import ChatArea from "../pages/tenant/partials/ChatArea";
+import ChangePassword from "../pages/auth/ChangePassword";
+import TenantProfilePage from "../pages/tenant/TenantProfilePage";
 
 const Router = createBrowserRouter (
     createRoutesFromElements (
@@ -22,6 +25,7 @@ const Router = createBrowserRouter (
         <Route path='/auth/*'>
             <Route path='login' element={<Login />} />
             <Route path='forgot-password' element={<ForgotPassword />} />
+            <Route path='change-password' element={<ChangePassword />} />
         </Route>
         <Route path='/tenant/*'>
             <Route path='dashboard' element={<TenantDashboard />} />
@@ -32,6 +36,7 @@ const Router = createBrowserRouter (
             <Route path='tenant-talk' element={<TenantTalk />} />
             <Route path="tenant-talk/:userId" element={<ChatArea />} />
             <Route path='document' element={<DocumentPage />} />
+            <Route path='profile' element={<TenantProfilePage />}/>
         </Route>
         </>
     )
