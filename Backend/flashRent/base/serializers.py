@@ -122,11 +122,18 @@ class TenantPropertiesSerializer(serializers.ModelSerializer):
     property_address = serializers.CharField(source='property.address')
     property_description = serializers.CharField(source='property.description')
     property_status = serializers.CharField(source='property.status')
+    property_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Tenant
-        fields = ['property_id', 'property_name', 'property_rentAmount', 'property_type', 'property_address', 'property_description', 'property_status']
-
+        fields = ['property_id', 'property_name', 'property_rentAmount', 'property_type', 'property_address', 'property_description', 'property_status',
+                    'property_image_url']
+    
+    def get_property_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.property.image1 and request:
+            return request.build_absolute_uri(obj.property.image1.url)
+        return None
 class MaintenanceRequestSerializer(serializers.ModelSerializer):
     image1_url = serializers.SerializerMethodField()
     image2_url = serializers.SerializerMethodField()

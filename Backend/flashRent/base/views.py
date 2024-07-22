@@ -241,7 +241,7 @@ class TenantPropertiesView(APIView):
     def get(self, request):
         user = request.user
         tenant_properties = Tenant.objects.filter(tenant=user)
-        serializer = serializers.TenantPropertiesSerializer(tenant_properties, many=True)
+        serializer = serializers.TenantPropertiesSerializer(tenant_properties, many=True, context={'request': request})
         return Response(serializer.data)
 
 class MaintenanceRequestView(APIView):
