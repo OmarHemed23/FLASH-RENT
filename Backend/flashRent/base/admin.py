@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, PropertyType, Property, Tenant, RentalApplication, MaintenanceRequest, Document
+from .models import User, PropertyType, Property, Tenant, RentalApplication, MaintenanceRequest, Document, Payment
 from . import emails
 from django.utils.crypto import get_random_string
 from django.utils.timezone import now
@@ -17,7 +17,6 @@ def accept_applications(modeladmin, request, queryset):
         lease_end = lease_start + timedelta(days=365) 
 
         if user:
-            # Existing tenant
             Tenant.objects.create(
                 tenant=user,
                 property=application.property,
@@ -26,7 +25,6 @@ def accept_applications(modeladmin, request, queryset):
             )
             emails.send_application_accepted_email(user.email, application.property.name)
         else:
-            # New guest
             username = f"{application.guest_first_name.lower()}{application.guest_last_name.lower()}{application.id}"
             password = get_random_string(8)
             new_user = User.objects.create_user(
@@ -92,7 +90,6 @@ class PropertyAdmin(admin.ModelAdmin):
             'fields': ('id', 'name', 'property_type', 'address', 'description', 'rent_amount', 'image1', 'image2', 'image3', 'status')
         }),
     )
-    # Optionally, add search fields to quickly find properties
     search_fields = ['name', 'address', 'rent_amount']
     ordering = ['name']
 
@@ -102,14 +99,25 @@ class DocumentAdmin(admin.ModelAdmin):
     list_filter = ['publication_date']
     readonly_fields = ['created_at']
 
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['tenant', 'property', 'amount', 'transaction_id', 'mpesa_receipt_number', 'status', 'payment_date', 'confirmation_date']
+    search_fields = ['mpesa_receipt_number']
+    list_filter = ['amount', 'property', 'status', 'payment_date', 'confirmation_date']
+
+class TenantAdmin(admin.ModelAdmin):
+    list_display = ['id', 'property', 'lease_start', 'lease_end', 'lease_status', 'profile_picture']
+    search_fields = ['name', 'tenant__user__username']
+    list_filter = ['property', 'lease_start', 'lease_end', 'lease_status']
+
 # Register your models here.
 admin.site.register(RentalApplication, RentalApplicationAdmin)
 # admin.site.register(User)
 admin.site.register(PropertyType)
 admin.site.register(Property, PropertyAdmin)
-admin.site.register(Tenant)
+admin.site.register(Tenant, TenantAdmin)
 admin.site.register(Document, DocumentAdmin)
 admin.site.register(MaintenanceRequest, MaintenanceRequestAdmin)
+admin.site.register(Payment, PaymentAdmin)
 
 
 admin.site.site_header = "FLASH RENT"

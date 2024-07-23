@@ -37,7 +37,7 @@ class Property(models.Model):
     ]
     name = models.CharField(max_length=255, unique=True)
     property_type = models.ForeignKey(PropertyType, on_delete=models.CASCADE)
-    address = AddressField(on_delete=models.CASCADE)
+    address = AddressField(on_delete=models.SET_NULL, null=True)  # Changed to SET_NULL
     rent_amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(null=True, blank=True)
     image1 = models.ImageField(upload_to='images/', blank=True, null=True)
@@ -71,7 +71,7 @@ class Tenant(models.Model):
         ("Cancelled", "Cancelled"),
     ]
     tenant = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tenants")
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, verbose_name="Property Leased", related_name="properties_leased")
+    property = models.ForeignKey(Property, on_delete=models.SET_NULL, null=True, verbose_name="Property Leased", related_name="properties_leased")  # Changed to SET_NULL
     lease_start = models.DateTimeField()
     lease_end = models.DateTimeField()
     lease_status = models.CharField(max_length=20, choices=LEASE_STATUS_CHOICES, default="Active")
@@ -123,7 +123,7 @@ class RentalApplication(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        applicant_info = self.applicant.username if self.applicant else f"Guest {self.guest_email}"
+        applicant_info = self.applicant.tenant.username if self.applicant else f"Guest {self.guest_email}"
         return f"Application for {self.property.name} by {applicant_info}"
 
 class MaintenanceRequest(models.Model):
@@ -133,7 +133,7 @@ class MaintenanceRequest(models.Model):
         ("Completed", "Completed"),
     ]
 
-    property = models.ForeignKey('Property', on_delete=models.CASCADE)
+    property = models.ForeignKey(Property, on_delete=models.SET_NULL, null=True)  # Changed to SET_NULL
     issue = models.CharField(max_length=255)
     description = models.TextField()
     image1 = models.ImageField(upload_to='maintenance_requests/', blank=True, null=True)
@@ -169,9 +169,10 @@ class Payment(models.Model):
     ]
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="payments")
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="payments")
+    property = models.ForeignKey(Property, on_delete=models.SET_NULL, null=True, related_name="payments")  # Changed to SET_NULL
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    mpesa_receipt_number = models.CharField(max_length=50, blank=True, null=True)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default="Pending")
     payment_date = models.DateTimeField(default=timezone.now)
     confirmation_date = models.DateTimeField(null=True, blank=True)
@@ -187,8 +188,9 @@ class Payment(models.Model):
             raise ValidationError("The payment amount must be greater than zero.")
         super().save(*args, **kwargs)
 
-    def confirm_payment(self, transaction_id, status):
+    def confirm_payment(self, transaction_id, mpesa_receipt_number, status):
         self.transaction_id = transaction_id
+        self.mpesa_receipt_number = mpesa_receipt_number
         self.status = status
         if status == "Completed":
             self.confirmation_date = timezone.now()

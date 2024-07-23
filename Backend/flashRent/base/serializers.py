@@ -159,5 +159,9 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = models.Document
         fields = ['id', 'name', 'tenant', 'publication_date', 'file', 'created_at']
 
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Payment
+        fields = '__all__'
 
 

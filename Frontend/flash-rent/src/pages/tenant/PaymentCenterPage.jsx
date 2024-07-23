@@ -4,22 +4,17 @@ import AuthenticatedLayout from "../../layout/AuthenticatedLayout";
 import FormField from "../../components/FormField";
 import PrimaryButton from "../../components/PrimaryButton";
 import { useToken } from "../../hooks/useToken";
+import Alert from "../../components/Alert";
 
 export default function PaymentCenterPage() {
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState({
-    property: '',
-    tenant_name: '',
-    email: '',
-    mpesaNumber: '',
-    leaseStart: '',
-    leaseEnd: '',
-    totalAmount: 0
-  });
-  const [propertyOptions, setPropertyOptions] = useState();
-  const [leasedPropertyData, setLeasedPropertyData] = useState();
-  const [tenantData, setTenantData] = useState();
+  const [formData, setFormData] = useState({property: '',tenant_name: '',email: '',mpesaNumber: '',leaseStart: '',leaseEnd: '',totalAmount: 0});
+  const [propertyOptions, setPropertyOptions] = useState([]);
+  const [leasedPropertyData, setLeasedPropertyData] = useState({});
+  const [tenantData, setTenantData] = useState({});
   const [proratedRent, setProratedRent] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const {token} = useToken();
 
   const steps = [
@@ -41,7 +36,7 @@ export default function PaymentCenterPage() {
             value: property.property_id,
             label: property.property_name
           }))
-        )
+        );
         response.data.length > 0 ? setLeasedPropertyData(response.data[0]) : console.error("Error");
       } catch (error) {
         console.log("Error fetching properties:", error);
@@ -56,12 +51,12 @@ export default function PaymentCenterPage() {
         });
         response.data.length > 0 ? setTenantData(response.data[0]) : console.error("Error fetching tenant data");
       } catch (error) {
-        console.error("Error feching data: ", error);
+        console.error("Error fetching data: ", error);
       }
     }
     fetchLeasedProperties();
     fetchTenantData();
-  },[token]);
+  }, [token]);
 
   useEffect(() => {
     if (formData.leaseStart && formData.leaseEnd && formData.property && leasedPropertyData) {
@@ -82,8 +77,12 @@ export default function PaymentCenterPage() {
 
   const handleNextStep = (e) => {
     e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
     if (activeStep < steps.length - 1) {
       setActiveStep(activeStep + 1);
+    } else {
+      initiatePayment();
     }
   };
 
@@ -99,53 +98,59 @@ export default function PaymentCenterPage() {
     setFormData({ ...formData, [name]: value });
   };
 
+  const initiatePayment = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/api/initiate-payment/', {
+        tenant_id: tenantData.id,
+        property_id: formData.property,
+        amount: formData.totalAmount,
+        phone_number: formData.mpesaNumber,
+      }, {
+        headers: {
+          'Authorization': `token ${token}`
+        }
+      });
+
+      if (response.status === 200 && response.data.response.ResponseCode === '0') {
+        setSuccessMessage('Payment initiated successfully. Please complete the payment on your M-Pesa phone.');
+      } else {
+        setErrorMessage('Payment initiation failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error initiating payment:', error);
+      setErrorMessage('Error initiating payment. Please try again.');
+    }
+  };
+
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
         return (
           <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <div className="md:col-span-2">
-              <FormField label="Property" name="property" id="property" type="select" options={propertyOptions} value={formData.property}
-              onChange={handleInputChange}
-              />
+              <FormField label="Property" name="property" id="property" type="select" options={propertyOptions} value={formData.property} onChange={handleInputChange} />
             </div>
             {tenantData && (
               <>
-                <FormField label="Full Name" type="text" name="tenant_name" id="tenant_name" placeholder="Full Name" value={tenantData.tenant_name}
-                readOnly
-                />
-                <FormField label="Email" type="email" name="email" id="email" placeholder="Your Email" value={tenantData.email}
-                readOnly
-                />
+                <FormField label="Full Name" type="text" name="tenant_name" id="tenant_name" placeholder="Full Name" value={tenantData.tenant_name} readOnly />
+                <FormField label="Email" type="email" name="email" id="email" placeholder="Your Email" value={tenantData.email} readOnly />
               </>
             )}
             <div className="md:col-span-2">
-              <FormField label="M-Pesa Account Number" type="text" name="mpesaNumber" id="mpesaNumber" placeholder="Your M-Pesa number"
-              onChange={handleInputChange}
-              value={formData.mpesaNumber}
-              />
+              <FormField label="M-Pesa Account Number" type="text" name="mpesaNumber" id="mpesaNumber" placeholder="Your M-Pesa number" onChange={handleInputChange} value={formData.mpesaNumber} />
             </div>
           </div>
         );
       case 1:
         return (
           <div className="grid gap-4 md:grid-cols-2 md:gap-6">
-            <FormField label="Lease Start Date" type="date" name="leaseStart" id="leaseStart" placeholder="Lease start date"
-            onChange={handleInputChange}
-            value={formData.leaseStart}
-            />
-            <FormField label="Lease End Date" type="date" name="leaseEnd" id="leaseEnd" placeholder="Lease end date"
-            onChange={handleInputChange}
-            value={formData.leaseEnd}
-            />
+            <FormField label="Lease Start Date" type="date" name="leaseStart" id="leaseStart" placeholder="Lease start date" onChange={handleInputChange} value={formData.leaseStart} />
+            <FormField label="Lease End Date" type="date" name="leaseEnd" id="leaseEnd" placeholder="Lease end date" onChange={handleInputChange} value={formData.leaseEnd} />
             {leasedPropertyData && (
-            <div className="md:col-span-2">
-              <FormField label="Total Amount" type="text" name="totalAmount" id="totalAmount" placeholder="Total amount"
-              readOnly
-              value={formData.totalAmount}
-              />
-            </div>
-             )}
+              <div className="md:col-span-2">
+                <FormField label="Total Amount" type="text" name="totalAmount" id="totalAmount" placeholder="Total amount" readOnly value={formData.totalAmount} />
+              </div>
+            )}
           </div>
         );
       case 2:
@@ -171,7 +176,7 @@ export default function PaymentCenterPage() {
                 </div>
               </div>
               <div className="w-full rounded-lg border border-gray-200 bg-gray-100 p-4 shadow-md dark:border-gray-700 dark:bg-gray-800">
-                <PrimaryButton className="flex w-full items-center justify-center">
+                <PrimaryButton type="submit" className="flex w-full items-center justify-center">
                   Pay now
                 </PrimaryButton>
               </div>
@@ -187,9 +192,9 @@ export default function PaymentCenterPage() {
     <AuthenticatedLayout>
       <section className="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 shadow-md rounded-lg">
         <div className="py-8 px-4 mx-auto max-w-2xl lg:py-16">
-          <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-            Lipa Na M-Pesa
-          </h2>
+          <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">Lipa Na M-Pesa</h2>
+          {errorMessage && <Alert type="error" message={errorMessage}/>}
+          {successMessage && <Alert type="success" message={successMessage}/>}
           <form onSubmit={handleNextStep}>
             {renderStepContent(activeStep)}
             <div className="flex justify-between mt-3">
@@ -214,6 +219,7 @@ export default function PaymentCenterPage() {
     </AuthenticatedLayout>
   );
 }
+
 
 
 

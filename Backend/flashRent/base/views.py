@@ -8,7 +8,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.hashers import make_password
-from base.models import Property, PropertyType, Tenant, RentalApplication, MaintenanceRequest, Document
+from base.models import Property, PropertyType, Tenant, RentalApplication, MaintenanceRequest, Document, Payment
 from base import serializers
 from address.models import Address, Country, State, Locality
 from base import emails
@@ -17,10 +17,9 @@ from django.http import HttpResponse
 from django.views import View
 from base import pdfs
 from django.core.files.base import ContentFile
-import io
-from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+import requests
+from .mpesa_client import MpesaClient
 
 class PropertyTypeView(APIView):
     def get(self, request):
@@ -308,11 +307,6 @@ class MaintenanceRequestDetailView(APIView):
         except MaintenanceRequest.DoesNotExist:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         
-class DocumentViewSet(viewsets.ModelViewSet):
-    queryset = Document.objects.all()
-    serializer_class = serializers.DocumentSerializer
-    permission_classes = [IsAuthenticated]
-        
 class LeaseAgreementView(View):
     permission_classes = [IsAuthenticated]
     
@@ -339,6 +333,50 @@ class LeaseAgreementView(View):
             'file_url': document.file.url
         })
         return response
+    
+class DocumentViewSet(viewsets.ModelViewSet):
+    queryset = Document.objects.all()
+    serializer_class = serializers.DocumentSerializer
+    permission_classes = [IsAuthenticated]
+
+class InitiatePaymentView(APIView):
+    def post(self, request):
+        tenant_id = request.data.get('tenant_id')
+        property_id = request.data.get('property_id')
+        amount = request.data.get('amount')
+        phone_number = request.data.get('phone_number')
+
+        tenant = Tenant.objects.get(id=tenant_id)
+        property = Property.objects.get(id=property_id)
+
+        payment = Payment.objects.create(
+            tenant=tenant,
+            property=property,
+            amount=amount,
+            status="Pending"
+        )
+
+        mpesa_client = MpesaClient()
+        response = mpesa_client.lipa_na_mpesa_online(
+            amount=amount,
+            phone_number=phone_number,
+            account_reference=str(payment.id),
+            transaction_desc=f"Payment for {property.name}"
+        )
+
+        if response and response.get('ResponseCode') == '0':
+            return Response({"message": "Payment initiated successfully", "response": response}, status=status.HTTP_200_OK)
+        else:
+            payment.status = "Failed"
+            payment.save()
+            return Response({"message": "Payment initiation failed", "response": response}, status=status.HTTP_400_BAD_REQUEST)
+        
+class MpesaCallbackView(APIView):
+    def post(self, request):
+        callback_data = request.data
+        mpesa_client = MpesaClient()
+        mpesa_client.handle_callback(callback_data)
+        return Response(status=status.HTTP_200_OK)
 
 class LeaseReportView(View):
     permission_classes = [IsAuthenticated]

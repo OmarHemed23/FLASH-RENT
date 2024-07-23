@@ -25,6 +25,7 @@ urlpatterns = [
     path('lease-agreement/<int:tenant_id>/', views.LeaseAgreementView.as_view(), name='lease_agreement'),
     path('lease-report/<int:tenant_id>/', views.LeaseReportView.as_view(), name='lease-report'),
     path('tenant-properties-report/<int:tenant_id>/', views.TenantPropertiesReportView.as_view(), name='tenant_properties_report'),
+    path('api/initiate-payment/', views.InitiatePaymentView.as_view(), name='initiate-payment'),
 ]
 
 
